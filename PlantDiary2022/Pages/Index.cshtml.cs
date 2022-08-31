@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MyPlantDiary;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
 using System.Net;
 
 namespace PlantDiary2022.Pages
@@ -35,7 +37,18 @@ namespace PlantDiary2022.Pages
             {
                 Task<string> readString = result.Content.ReadAsStringAsync();
                 string jsonString = readString.Result;
-                specimens = Specimen.FromJson(jsonString);
+                JSchema schema = JSchema.Parse(System.IO.File.ReadAllText("specimenschema.json"));
+                JArray jsonArray = JArray.Parse(jsonString);
+                IList<string> validationEvents = new List<string>();
+                if (jsonArray.IsValid(schema, out validationEvents)) {
+                    specimens = Specimen.FromJson(jsonString);
+                } else
+                {
+                    foreach(string evt in validationEvents) {
+                        Console.WriteLine(evt);
+                    }
+                }
+
             }
             ViewData["Specimens"] = specimens;
             
