@@ -5,10 +5,12 @@
     var brand = ViewData["Brand"];
     ViewData["Title"] = brand;
     List<Specimen> specimens = (List<Specimen>) ViewData["Specimens"];
+    var apikey = ViewData["apikey"];
 
 }
 
 <div class="text-center">
+    @apikey
     <h1 class="display-4">Welcome to @brand</h1>
     <p>Catalog your plants, where they are, when they have been watered and fertilized.</p>
     <p>We're glad you're here!</p>

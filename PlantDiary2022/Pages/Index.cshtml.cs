@@ -26,6 +26,12 @@ namespace PlantDiary2022.Pages
             List<Specimen> result = task.Result;
             ViewData["Specimens"] = result;
 
+            var config = new ConfigurationBuilder()
+                .AddUserSecrets<Program>()
+                .Build();
+            string apikey = config["apikey"];
+            ViewData["apikey"] = apikey;
+
         }
 
         private async Task<List<Specimen>> GetData() {
