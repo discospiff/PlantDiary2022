@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using MyPlantDiary;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
+using PlantFeed;
 using System.Net;
 
 namespace PlantDiary2022.Pages
@@ -21,6 +22,12 @@ namespace PlantDiary2022.Pages
 
         public void OnGet()
         {
+            var result = GetData();
+            ViewData["Specimens"] = result;
+
+        }
+
+        private List<Specimen> GetData() { 
             string brand = "My Plant Diary";
             string inBrand = Request.Query["Brand"];
             if (inBrand != null && inBrand.Length > 0)
@@ -40,18 +47,42 @@ namespace PlantDiary2022.Pages
                 JSchema schema = JSchema.Parse(System.IO.File.ReadAllText("specimenschema.json"));
                 JArray jsonArray = JArray.Parse(jsonString);
                 IList<string> validationEvents = new List<string>();
-                if (jsonArray.IsValid(schema, out validationEvents)) {
-                    specimens = Specimen.FromJson(jsonString);
-                } else
+                if (jsonArray.IsValid(schema, out validationEvents))
                 {
-                    foreach(string evt in validationEvents) {
+                    specimens = Specimen.FromJson(jsonString);
+                }
+                else
+                {
+                    foreach (string evt in validationEvents)
+                    {
                         Console.WriteLine(evt);
                     }
                 }
 
             }
-            ViewData["Specimens"] = specimens;
-            
+            Task<HttpResponseMessage> plantTask = client.GetAsync("http://plantplaces.com/perl/mobile/viewplantsjsonarray.pl?WetTolerant=on");
+            HttpResponseMessage plantResult = plantTask.Result;
+            Task<string> plantTaskString = plantResult.Content.ReadAsStringAsync();
+            string plantJson = plantTaskString.Result;
+            List<Plant> plants = Plant.FromJson(plantJson);
+
+            IDictionary<long, Plant> waterLovingPlants = new Dictionary<long, Plant>();
+            foreach (Plant plant in plants)
+            {
+                waterLovingPlants[plant.Id] = plant;
+            }
+            List<Specimen> waterLovingSpecimens = new List<Specimen>();
+            foreach (Specimen specimen in specimens)
+            {
+                if (waterLovingPlants.ContainsKey(specimen.PlantId))
+                {
+                    // it's a water loving plant.
+                    waterLovingSpecimens.Add(specimen);
+
+                }
+            }
+
+            return waterLovingSpecimens;
 
         }
     }
