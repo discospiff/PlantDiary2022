@@ -26,11 +26,6 @@ namespace PlantDiary2022.Pages
             List<Specimen> result = task.Result;
             ViewData["Specimens"] = result;
 
-            var config = new ConfigurationBuilder()
-                .AddUserSecrets<Program>()
-                .Build();
-            string apikey = config["apikey"];
-            ViewData["apikey"] = apikey;
 
         }
 
@@ -49,6 +44,16 @@ namespace PlantDiary2022.Pages
                 Task<HttpResponseMessage> plantTask = client.GetAsync("http://plantplaces.com/perl/mobile/viewplantsjsonarray.pl?WetTolerant=on");
 
                 var task = client.GetAsync("http://plantplaces.com/perl/mobile/specimenlocations.pl?Lat=39.14455&Lng=-84.50939&Range=0.5&Source=location");
+
+
+                var config = new ConfigurationBuilder()
+                    .AddUserSecrets<Program>()
+                    .Build();
+                string weatherapikey = config["weatherapikey"];
+
+                string weatherEndpoint = "https://api.weatherbit.io/v2.0/current?&city=Cincinnati&country=USA&key=" + weatherapikey;
+                Task<HttpResponseMessage> weatherTask = client.GetAsync(weatherEndpoint);
+                
                 HttpResponseMessage result = task.Result;
                 List<Specimen> specimens = new List<Specimen>();
                 if (result.IsSuccessStatusCode)
@@ -90,6 +95,25 @@ namespace PlantDiary2022.Pages
                         waterLovingSpecimens.Add(specimen);
 
                     }
+                }
+                HttpResponseMessage weatherResponse = await weatherTask;
+                Task<string> weatherReadTask = weatherResponse.Content.ReadAsStringAsync();
+                string weatherJson = weatherReadTask.Result;
+                
+                long precip = 0;
+                WeatherFeed.Weather weather = WeatherFeed.Weather.FromJson(weatherJson);
+                List<WeatherFeed.Datum> weatherData = weather.Data;
+                foreach(WeatherFeed.Datum weatherDatum in weatherData)
+                {
+                    precip = weatherDatum.Precip;
+                }
+                if (precip < 1)
+                {
+                    ViewData["Message"] = "It's dry!  Water these plants.";
+                }
+                else
+                {
+                    ViewData["Message"] = "Rain expected.  No need to water.";
                 }
 
                 return waterLovingSpecimens;
