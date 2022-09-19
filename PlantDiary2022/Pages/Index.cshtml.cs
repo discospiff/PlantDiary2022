@@ -106,7 +106,7 @@ namespace PlantDiary2022.Pages
                 foreach(WeatherFeed.Datum weatherDatum in weatherData)
                 {
                     precip = weatherDatum.Precip;
-                }
+                } 
                 if (precip < 1)
                 {
                     ViewData["Message"] = "It's dry!  Water these plants.";
