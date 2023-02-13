@@ -25,6 +25,7 @@ namespace PlantDiary2022.Pages
             var task = GetData();
             List<Specimen> result = task.Result;
             ViewData["Specimens"] = result;
+            SpecimenRoster.allSpecimens = result;
 
 
         }
