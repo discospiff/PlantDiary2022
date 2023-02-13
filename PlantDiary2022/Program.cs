@@ -1,9 +1,25 @@
+using System.Reflection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen( options =>
+  {
+      options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+      {
+          Version = "v1",
+          Title = "Specimens API",
+          Description = "A web service that shows specimens that are thirsty at CZBG",
+          TermsOfService = new Uri("https://plantplaces.com/privacy.shtml")
+      });
+      
+  }
+
+    
+    );
 
 var app = builder.Build();
 
@@ -13,6 +29,12 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
